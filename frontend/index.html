@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Village - 30日間自律型AIエージェント社会シミュレーション</title>
+    <meta name="description" content="2Dドット絵の仮想村で、30日間にわたるシナリオイベントと神の介入に対するAI住人たちの社会変化・派閥・対立を検証するシミュレーション環境" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app" class="dashboard-root">
+      <!-- 頂点ヘッダーバー -->
+      <header class="app-header">
+        <div class="header-brand">
+          <div class="logo-badge">🏰</div>
+          <div class="brand-text">
+            <h1 class="app-title">AI Village <span class="badge-edition">30-Day Experiment</span></h1>
+            <span class="app-subtitle">Autonomous Generative Agents & Social Emergence</span>
+          </div>
+        </div>
+
+        <!-- サーバー状態 ＆ 時間・速度コントロール -->
+        <div class="header-status">
+          <div class="status-pill">
+            <span class="pulsing-dot"></span>
+            <span class="status-label">接続確認中...</span>
+          </div>
+          
+          <div class="time-widget">
+            <span class="clock-icon">☀️</span>
+            <span id="village-time" class="time-text">Day 1 - 08:00 AM</span>
+          </div>
+
+          <!-- 速度コントロール -->
+          <div class="speed-control-group" aria-label="シミュレーション速度">
+            <button id="btn-speed-pause" class="btn-speed" title="一時停止">⏸</button>
+            <button id="btn-speed-1" class="btn-speed active" data-speed="1">1x</button>
+            <button id="btn-speed-5" class="btn-speed" data-speed="5">5x</button>
+            <button id="btn-speed-20" class="btn-speed" data-speed="20">20x</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- イベント発生トースト通知コンテナ -->
+      <div id="toast-container" class="toast-container"></div>
+
+      <!-- メインコンテンツ領域 -->
+      <main class="main-layout">
+        <!-- 2Dゲーム画面エリア -->
+        <section class="game-wrapper" aria-label="仮想村マップ">
+          <div id="game-container" class="game-canvas-container"></div>
+          
+          <!-- ゲーム画面上オーバーレイUI -->
+          <div class="canvas-overlay top-left">
+            <div class="badge-mini">
+              <span>📍 エリア:</span>
+              <strong id="current-area">村の中央広場</strong>
+            </div>
+          </div>
+
+          <!-- ゲーム画面上 操作バー -->
+          <div class="canvas-overlay bottom-controls">
+            <div class="control-group">
+              <button id="btn-trigger-dialogue" class="btn btn-action" title="アリスとボブを引き寄せて会話イベントを発生させます">
+                <span class="btn-icon">💬</span>
+                <span>会話誘発</span>
+              </button>
+              <button id="btn-focus-alice" class="btn btn-secondary">
+                <span class="avatar-dot alice-dot"></span>
+                <span>アリス追尾</span>
+              </button>
+              <button id="btn-focus-bob" class="btn btn-secondary">
+                <span class="avatar-dot bob-dot"></span>
+                <span>ボブ追尾</span>
+              </button>
+              <button id="btn-reset-cam" class="btn btn-icon-only" title="全体表示に戻す">
+                <span>🔄</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ⚡ 神様介入バー (God Mode) -->
+          <div class="god-mode-bar">
+            <div class="god-mode-label">
+              <span class="god-icon">⚡</span>
+              <span>神様の介入:</span>
+            </div>
+            <form id="god-form" class="god-form">
+              <input
+                id="god-input"
+                type="text"
+                class="god-input"
+                placeholder="例: 広場の中央に怪しい宝箱が出現した！ / 小麦粉の犯人は森に逃げたぞ！"
+                autocomplete="off"
+              />
+              <button type="submit" id="btn-send-god" class="btn btn-god">
+                <span>投下する</span>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- 右側ダッシュボード (エージェント詳細 ＆ ログ) -->
+        <aside class="sidebar-dashboard" aria-label="エージェントステータスとログ">
+          <!-- エージェント選択タブ (10人) -->
+          <div id="agent-selector-container" class="agent-grid-selector">
+            <!-- JSで10人のエージェントボタンが生成されます -->
+          </div>
+
+          <!-- エージェントステータスカード -->
+          <div class="card agent-card">
+            <div class="agent-header">
+              <div class="agent-avatar-box" id="agent-avatar-display">
+                👩‍🍳
+              </div>
+              <div class="agent-meta">
+                <div class="agent-name-row">
+                  <h2 id="agent-name" class="agent-name">アリス</h2>
+                  <span id="agent-state-badge" class="badge-state walking">徘徊中</span>
+                </div>
+                <div id="agent-role" class="agent-role">パン屋見習いの少女</div>
+              </div>
+            </div>
+
+            <!-- 現在の目標 -->
+            <div class="agent-info-section">
+              <div class="section-title">
+                <span>🎯</span>
+                <span>現在の目標</span>
+              </div>
+              <div id="agent-goal" class="goal-box">
+                森に生えているという伝説の香り草（ムーンハーブ）を見つけて、特別なパンを焼きたい。
+              </div>
+            </div>
+
+            <!-- 最新の心の声 (Inner Thought) -->
+            <div class="agent-info-section">
+              <div class="section-title">
+                <span>💭</span>
+                <span>最新の心の声 (Inner Thought)</span>
+              </div>
+              <div id="agent-thought" class="thought-box">
+                「良い天気だな〜。広場に行けば誰かハーブに詳しい人に会えるかもしれない！」
+              </div>
+            </div>
+          </div>
+
+          <!-- 村のリアルタイムログ -->
+          <div class="card log-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span>📜</span>
+                <span>村のタイムライン＆会話ログ</span>
+              </h3>
+              <span id="log-count" class="badge-count">0件</span>
+            </div>
+            <div id="activity-feed" class="feed-container">
+              <!-- 動的ログアイテムがここに挿入されます -->
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
